@@ -1,0 +1,86 @@
+
+RD Strat for Rodney email on 02/07
+
+%_unknown macro:
+	Replaces "Unknown" values with ' ' (missing value)
+
+%_sort:
+	Sorts raw.encounter by patient_id and out=encounter
+
+Datasteps from line 16:
+	* merging scd.patient (with variables patient id, year_of_birth, death (0 or 1) and death_d) with encounter by patient_id
+
+	* formats state_d and end_d columns by date7 formatting
+		-> ddMMMyyyy
+
+	* omits temp_d from the dataset
+
+	*n() counts non missing values, subsetting 'if' only processes observations that meet conditions
+		-> ASK AB THIS
+
+	*reformats unknowns again
+
+	*format start_d and end_d to SAS date format mmddyy8.
+
+	*make end_d =. if end_d = start_d
+	
+	* if start_d is after end_d then swap them
+Datastep conclusion - made a set that pairs patient_id with dates. Cleaned data and formatted dates as wanted. 
+
+%_constant: 
+	Drops variables that are ALWAYS the same value across observations.
+
+*sort data by patient_id, start_d, end_d, encounter_id
+
+Datasteps from line 47:
+	*set scd.encounter -> formatted data after Raw
+
+	*Include start dates from 01/01/07 to 12/31/2020
+		-> Should this be 2019?
+
+	*sort by patient id
+
+	*make an array of ages from 2007-2020 (age07-age20)
+
+	*make an array of years from 2007-2020 (_2007-_2020)
+
+	*retains values of _2007-_2020, first_d, last19_d, etc.
+		-> retains the values of the variables from one iteration of the datastep to the next.
+
+	*keeps variables 
+	
+	*formats dates to date7.
+
+	*if first observation for the patient, thendo first_d = start_d and last_20d = end_d
+		->then if end_d <= 12/31/2019 then last19_d=end_d
+			-> else last_19d= . (Missing)
+
+	*sets all values of the _2007-_2020 = 0
+
+	*set first_d = minimum(earliest date) of first_d and start_d
+
+	*set last20_d = maximum (latest date) of last20_d and end_d
+
+	*if the end date is before 12/31/2019 then last19_d = max (latest date) of last19_d and end_d
+
+	*Set the year of the start date in _2007-_2020 to 1
+
+	*Set the year of the end date in _2007-_2020 to 1
+
+	*if last.patient_id
+		GUESS?-> then for years 2007 to 2020, if _(year) = 1 then
+				->_age(year)=intck(years, birthyr, year)
+					->This gives the amount of time (years) between dates
+
+Datastep conclusion: Gets first date of trtmnt, last date (depending on year) of treatment, cleans dates against errors, and gets age of each of the patient at given year 
+
+Proc Freq:
+	-> Makes table of individuals who've started treatment in 2007 and/or 2008 and/or 2009. Shows frequency of these
+
+	-> Makes table of ages in the years 07,08,09 and their frequencies.
+
+	Q: If, say age08 = 9 and age09=10, then we know that these individual have reported data in 2009 and 2010?
+
+	This is a great visual on how many patients have treatment in consecutive years, and how old they were during those years. 
+	It also appears that individuals with 3 consecutive years have great reporting - we'd have a lot of data if we set our pre-follow-up period to only be 2 years - that would include all patients with 2 concecutive reporting years whose age09 < 18
+	

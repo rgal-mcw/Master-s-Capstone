@@ -1,0 +1,3 @@
+Questions for Rodney while creating documentation:
+
+1) In scd.cases, what does the 'cases' column do?
